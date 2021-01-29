@@ -1,2 +1,2 @@
-# spc-geonode
+# nexus-geonode
 Nexus Platform
