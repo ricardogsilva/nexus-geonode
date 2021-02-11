@@ -1,0 +1,11 @@
+{
+    "locale": "en-US",
+    "messages": {
+        "gnhome": {
+            "description": "<h1>Nexus</h1><p>Pacific Resilience Knowledge Hub</p>",
+            "spcInt": "spc.int",
+            "noPublicContentTitle": "Welcome to Nexus",
+            "noContentYetTitle": "Welcome to Nexus"
+        }
+    }
+}
