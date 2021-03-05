@@ -1,0 +1,94 @@
+{% extends 'geonode-mapstore-client/_geonode_config.html' %}
+{% block override_local_config %}
+<script>
+    window.__GEONODE_CONFIG__.overrideLocalConfig = function(localConfig, _) {
+        return _.mergeWith(localConfig, {
+            "translationsPath": [
+                "/static/mapstore/ms-translations",
+                "/static/mapstore/gn-translations",
+                "/static/mapstore/translations"
+            ],
+            "supportedLocales": {
+                "en": {
+                    "code": "en-US",
+                    "description": "English"
+                },
+                "fr": {
+                    "code": "fr-FR",
+                    "description": "Français"
+                }
+            },
+            "geoNodeConfiguration": {
+                "theme": {
+                    "variant": "light",
+                    "color": "#1b7fba",
+                    "primary": {
+                        "color": "#ffffff",
+                        "bg": "#1b7fba"
+                    },
+                    "hero": {
+                        "style": {
+                            "backgroundImage": "url(/static/img/polynesia-hero.jpg)",
+                            "backgroundSize": "cover",
+                            "backgroundPosition": "center",
+                            "backgroundRepeat": "no-repeat"
+                        }
+                    },
+                    "jumbotron": {},
+                    "languageSelector": {
+                        "inline": true
+                    },
+                    "footer": {
+                        "bg": "#034f78",
+                        "color": "#ffffff",
+                        "link": {
+                            "color": "#ffffff",
+                            "hoverColor": "#dddddd"
+                        }
+                    }
+                },
+                "filters": {
+                    "extent": {
+                        "style": {
+                            "color": "#1b7fba",
+                            "opacity": 0.8,
+                            "fillColor": "#1b7fba",
+                            "fillOpacity": 0.4,
+                            "weight": 4
+                        }
+                    }
+                },
+                "navbar": {
+                    "logo": [
+                        {
+                            "src": "/static/img/logo.png",
+                            "href": "#/",
+                            "style": {
+                                "minHeight": 50
+                            }
+                        }
+                    ]
+                },
+                "footer": {
+                    "items": [
+                        {
+                            "labelId": "gnhome.spcInt",
+                            "type": "link",
+                            "href": "https://www.spc.int/"
+                        }
+                    ]
+                }
+            }
+        }, function(objValue, srcValue, key) {
+            if (_.isArray(objValue)) {
+                return srcValue;
+            }
+            // supportedLocales is an object so it's merged with the default one
+            // so to remove the default languages we should take only the supportedLocales from override
+            if (key === 'supportedLocales') {
+                return srcValue;
+            }
+        });
+    };
+</script>
+{% endblock %}
