@@ -28,11 +28,3 @@ urlpatterns += [
 ## include your urls here
 
 ]
-
-homepage = register_url_event()(TemplateView.as_view(template_name='site_index.html'))
-
-urlpatterns = [
-    url(r'^/?$',
-        homepage,
-        name='home'),
- ] + urlpatterns
