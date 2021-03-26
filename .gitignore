@@ -60,8 +60,7 @@ static_root/
 development.db
 development.db-journal
 local_settings.py
+.env
 
 .idea/
-
-/.vscode/settings.json
-.env
+.vscode/
