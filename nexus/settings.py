@@ -138,4 +138,7 @@ if LDAP_ENABLED and 'geonode_ldap' not in INSTALLED_APPS:
 # https://docs.geonode.org/en/master/advanced/contrib/#configuration
 
 
-INSTALLED_APPS += ('pdn',)
+INSTALLED_APPS += (
+    'pdn',
+    'gem',
+)
