@@ -91,7 +91,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'ERROR',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -106,6 +106,11 @@ LOGGING = {
             "handlers": ["console"], "level": "ERROR", },
         "geonode": {
             "handlers": ["console"], "level": "INFO", },
+        "geonode.harvesting": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
         "geoserver-restconfig.catalog": {
             "handlers": ["console"], "level": "ERROR", },
         "owslib": {
@@ -138,7 +143,17 @@ if LDAP_ENABLED and 'geonode_ldap' not in INSTALLED_APPS:
 # https://docs.geonode.org/en/master/advanced/contrib/#configuration
 
 
+# This is also used as the celery results backend
+CACHES["default"] = {
+    'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+    'LOCATION': '127.0.0.1:11211',
+}
+
 INSTALLED_APPS += (
     'pdn',
     'gem',
+)
+
+HARVESTER_CLASSES = (
+    'pdn.harvesters.PdnHarvesterWorker',
 )

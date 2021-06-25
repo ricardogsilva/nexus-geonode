@@ -2,6 +2,7 @@ from django.db import models
 
 
 class News(models.Model):
+    remote_id = models.BigIntegerField(unique=True)
     source_id = models.BigIntegerField
     title = models.CharField(max_length=250)
     url = models.CharField(max_length=1000)
@@ -12,6 +13,7 @@ class News(models.Model):
 
 
 class Project(models.Model):
+    remote_id = models.BigIntegerField(unique=True)
     name = models.CharField(max_length=250)
     acronym = models.CharField(max_length=250)
     description = models.TextField()
@@ -21,6 +23,7 @@ class Project(models.Model):
 
 
 class Alert(models.Model):
+    remote_id = models.BigIntegerField(unique=True)
     content = models.TextField()
     countries = models.CharField(max_length=1000)
     daterecieved = models.DateTimeField()
@@ -33,6 +36,7 @@ class Alert(models.Model):
 
 
 class Expert(models.Model):
+    remote_id = models.BigIntegerField(unique=True)
     name = models.CharField(max_length=250)
     title = models.CharField(max_length=250)
     country = models.CharField(max_length=25)
