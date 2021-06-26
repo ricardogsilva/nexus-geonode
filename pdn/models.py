@@ -3,7 +3,7 @@ from django.db import models
 
 class News(models.Model):
     remote_id = models.BigIntegerField(unique=True)
-    source_id = models.BigIntegerField
+    source_id = models.BigIntegerField()
     title = models.CharField(max_length=250)
     url = models.CharField(max_length=1000)
     country = models.CharField(max_length=25)
@@ -19,7 +19,7 @@ class Project(models.Model):
     description = models.TextField()
     logo_url = models.CharField(max_length=1000)
     url = models.CharField(max_length=1000)
-    active = models.BooleanField
+    active = models.BooleanField(default=False)
 
 
 class Alert(models.Model):
@@ -27,12 +27,10 @@ class Alert(models.Model):
     content = models.TextField()
     countries = models.CharField(max_length=1000)
     daterecieved = models.DateTimeField()
-    ignore = models.BooleanField
+    ignore = models.BooleanField(default=True)
     subject = models.TextField()
-    logo_url = models.CharField(max_length=1000)
     uuid = models.CharField(max_length=100)
-    active = models.BooleanField
-    source_id = models.BigIntegerField
+    source_id = models.BigIntegerField()
 
 
 class Expert(models.Model):
