@@ -3,13 +3,13 @@ import logging
 import typing
 
 import dateutil.parser
-import requests
 from geonode.base.models import ResourceBase
 from geonode.harvesting import (
     models as harvesting_models,
     resourcedescriptor
 )
 from geonode.harvesting.harvesters import base
+from nexus.utils import PostgRestClient
 
 from . import models
 
@@ -22,101 +22,6 @@ class PdnResourceType(enum.Enum):
     EXPERT = "experts"
     NEWS_ARTICLE = "news"
     PROJECT = "project"
-
-
-class PostgRestClient:
-    api_base_url: str
-    http_session: requests.Session
-    page_size: int
-    request_timeout_seconds: int
-
-    def __init__(
-            self,
-            api_base_url: str,
-            page_size: typing.Optional[int] = 10,
-            timeout: typing.Optional[int] = 5
-    ) -> None:
-        """Harvester-minded client for remote resources that use PostgREST as their API engine"""
-        self.http_session = requests.Session()
-        self.request_timeout_seconds = timeout
-        self.api_base_url = api_base_url
-        self.page_size = page_size
-
-    def check_availability(self) -> bool:
-        response = self.http_session.get(self.api_base_url, timeout=self.request_timeout_seconds)
-        return response.status_code == requests.codes.ok
-
-    def get_total_records(self, endpoint: str) -> int:
-        url = f"{self.api_base_url}{endpoint}"
-        logger.info(f"url: {url}")
-        response = self.http_session.get(
-            url,
-            headers={
-                "Range-Unit": "items",
-                "Range": "0-0",
-                "Prefer": "count=exact",
-            },
-            timeout=self.request_timeout_seconds
-        )
-        if response.status_code == requests.codes.partial_content:
-            content_range = response.headers["Content-Range"]
-            result = int(content_range.rpartition("/")[-1])
-        else:
-            logger.error(
-                f"Got back invalid response from {url!r} when determining number of "
-                f"total records"
-            )
-            result = 0
-        return result
-
-    def get_paginated_resources(
-            self,
-            endpoint: str,
-            offset: typing.Optional[int] = 0
-    ) -> typing.List[typing.Dict]:
-        url = f"{self.api_base_url}{endpoint}"
-        response = self.http_session.get(
-            url,
-            headers={
-                "Range-Unit": "items",
-                "Range": f"{offset}-{self.page_size - 1}",
-                "Accept": "application/json",
-            },
-            timeout=self.request_timeout_seconds
-        )
-        if response.status_code == requests.codes.ok:
-            result = response.json()
-        else:
-            logger.error(f"Received invalid response from {url}: {response.status_code} - {response.reason}")
-            result = []
-        return result
-
-    def get_resource(
-            self,
-            endpoint: str,
-            unique_identifier: str,
-            unique_identifier_name: typing.Optional[str] = "id"
-    ) -> typing.Optional[typing.Dict]:
-        url = f"{self.api_base_url}{endpoint}"
-        response = self.http_session.get(
-            url,
-            params={
-                unique_identifier_name: f"eq.{unique_identifier}",
-            },
-            headers={
-                "Accept": "application/vnd.pgrst.object+json",
-            },
-            timeout=self.request_timeout_seconds
-        )
-        if response.status_code == requests.codes.ok:
-            result = response.json()
-        else:
-            result = None
-            logger.error(
-                f"Could not retrieve resource with {unique_identifier_name}={unique_identifier}: "
-                f"{response.status_code} - {response.reason}"
-            )
-        return result
 
 
 class PdnHarvesterWorker(base.BaseHarvesterWorker):
@@ -283,12 +188,11 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvesting_session_id: int
     ) -> typing.Optional[resourcedescriptor.RecordDescription]:
         """Harvest a single resource from the remote service"""
-        remote_id = harvestable_resource.rpartition(self._UNIQUE_ID_SEPARATOR)[-1]
-        raw_resource = self._api_client.get_resource(harvestable_resource.remote_resource_type, remote_id)
+        remote_id = harvestable_resource.unique_identifier.rpartition(self._UNIQUE_ID_SEPARATOR)[-1]
+        raw_resource = self._api_client.get_resource(f"/{harvestable_resource.remote_resource_type}", remote_id)
         result = None
         if raw_resource is not None:
             if harvestable_resource.remote_resource_type == PdnResourceType.DOCUMENT.value:
-                # raise NotImplementedError
                 resource_descriptor = self._get_resource_descriptor_for_document_resource(raw_resource)
                 result = base.HarvestedResourceInfo(
                     resource_descriptor=resource_descriptor,
@@ -324,23 +228,21 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
             harvesting_session_id: int
-    ):
+    ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         try:
-            date_received = dateutil.parser.parse(raw_record["datereceived"])
+            date_received = dateutil.parser.parse(raw_record["daterecieved"])
         except KeyError:
             date_received = None
-        instance, created = models.Alert.objects.update_or_create(
+        models.Alert.objects.update_or_create(
             remote_id=raw_record["id"],
             defaults={
                 "content": raw_record.get("content", ""),
                 "countries": raw_record.get("countries", ""),
-                "datereceived": date_received,
+                "daterecieved": date_received,
                 "ignore": raw_record.get("ignore", False),
                 "subject": raw_record.get("subject", ""),
-                "logo_url": raw_record.get("logo_url", ""),  # TODO: This field seems to be absent from the remote API
                 "uuid": raw_record.get("uuid", ""),
-                "active": raw_record.get("active", True),  # TODO: This field seems to be absent from the remote API
                 "source_id": raw_record.get("source_id", 0),
             }
         )
@@ -351,16 +253,16 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvestable_resource: harvesting_models.HarvestableResource,
             harvesting_session_id: int
     ):
-        pass
+        raise NotImplementedError
 
     def _update_expert_record(
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
             harvesting_session_id: int
-    ):
+    ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
-        instance, created = models.Expert.objects.update_or_create(
+        models.Expert.objects.update_or_create(
             remote_id=raw_record["id"],
             defaults={
                 "name": raw_record.get("name", ""),
@@ -378,13 +280,13 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
             harvesting_session_id: int
-    ):
+    ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         try:
             date_ = dateutil.parser.parse(raw_record["date"])
         except KeyError:
             date_ = None
-        instance, created = models.Alert.objects.update_or_create(
+        models.News.objects.update_or_create(
             remote_id=raw_record["id"],
             defaults={
                 "source_id": raw_record.get("source_id", 0),
@@ -402,9 +304,9 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
             harvesting_session_id: int
-    ):
+    ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
-        instance, created = models.Alert.objects.update_or_create(
+        models.Project.objects.update_or_create(
             remote_id=raw_record["id"],
             defaults={
                 "name": raw_record.get("name", ""),
