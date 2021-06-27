@@ -1,9 +1,12 @@
+import copy
 import enum
 import logging
 import typing
+import uuid
 
 import dateutil.parser
 from geonode.base.models import ResourceBase
+from geonode.documents.models import Document
 from geonode.harvesting import (
     models as harvesting_models,
     resourcedescriptor
@@ -180,7 +183,9 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
         """
         Return the GeoNode type that should be created from the remote resource type
         """
-        raise NotImplementedError
+        return {
+            PdnResourceType.DOCUMENT.value: Document
+        }[remote_resource_type]
 
     def get_resource(
             self,
@@ -213,7 +218,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
     ):
         handler = {
             PdnResourceType.ALERT: self._update_alert_record,
-            PdnResourceType.DOCUMENT: self._update_document_record,
+            PdnResourceType.DOCUMENT: super().update_geonode_resource,
             PdnResourceType.EXPERT: self._update_expert_record,
             PdnResourceType.NEWS_ARTICLE: self._update_news_record,
             PdnResourceType.PROJECT: self._update_project_record,
@@ -222,6 +227,21 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             return handler(harvested_info, harvestable_resource, harvesting_session_id)
         else:
             raise RuntimeError(f"Invalid resource type: {harvestable_resource.remote_resource_type}")
+
+    def finalize_resource_update(
+            self,
+            geonode_resource: ResourceBase,
+            harvested_info: base.HarvestedResourceInfo,
+            harvestable_resource: harvesting_models.HarvestableResource,
+            harvesting_session_id: int
+    ) -> ResourceBase:
+        if harvestable_resource.remote_resource_type != PdnResourceType.DOCUMENT.value:
+            raise RuntimeError(f"Unexpected resource type: {harvestable_resource.remote_resource_type}")
+        else:
+            geonode_resource.thumbnail_url = harvested_info.resource_descriptor.distribution.thumbnail_url
+            geonode_resource.doc_url = harvested_info.resource_descriptor.distribution.original_format_url
+            geonode_resource.save()
+        return geonode_resource
 
     def _update_alert_record(
             self,
@@ -247,13 +267,14 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             }
         )
 
-    def _update_document_record(
-            self,
-            harvested_info: base.HarvestedResourceInfo,
-            harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
-    ):
-        raise NotImplementedError
+    # def _update_document_record(
+    #         self,
+    #         harvested_info: base.HarvestedResourceInfo,
+    #         harvestable_resource: harvesting_models.HarvestableResource,
+    #         harvesting_session_id: int
+    # ):
+    #     # use the default implementation of the base class
+    #     return super().update_geonode_resource(harvested_info, harvestable_resource, harvesting_session_id)
 
     def _update_expert_record(
             self,
@@ -422,6 +443,14 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             for record in raw_result:
                 if resource_type == PdnResourceType.ALERT:
                     title = f"{record['subject']} - {record.get('daterecieved', '')}"
+                elif resource_type == PdnResourceType.DOCUMENT:
+                    title_parts = [
+                        record.get("country", ""),
+                        record.get("title", ""),
+                        record.get("series", ""),
+                        record.get("publicationyear", ""),
+                    ]
+                    title = " - ".join([str(part) for part in title_parts if part != ""])
                 elif resource_type == PdnResourceType.EXPERT:
                     title = f"{record['name']} - {record['title']}"
                 elif resource_type == PdnResourceType.NEWS_ARTICLE:
@@ -433,7 +462,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 result.append(
                     base.BriefRemoteResource(
                         unique_identifier=f"{resource_type.value}{self._UNIQUE_ID_SEPARATOR}{record['id']}",
-                        title=title,
+                        title=title[:255],
                         resource_type=resource_type.value,
                     )
                 )
@@ -441,4 +470,53 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
 
     def _get_resource_descriptor_for_document_resource(
             self, raw_resource: typing.Dict) -> resourcedescriptor.RecordDescription:
-        raise NotImplementedError
+        raw_date_stamp = raw_resource.get("uploaddate")
+        date_stamp = dateutil.parser.parse(raw_date_stamp) if raw_date_stamp is not None else None
+        country = raw_resource.get("country")
+        point_of_contact = resourcedescriptor.RecordDescriptionContact(
+            role="pointOfContact",
+            name=raw_resource.get("authors"),
+            organization=raw_resource.get("corporateauthor"),
+            position=raw_resource.get("publisher"),
+            address_country=country,
+        )
+        author = copy.deepcopy(point_of_contact)
+        author.role = "author"
+        download_uri = raw_resource.get("filename")
+        if download_uri is not None:
+            download_url = f"{self.remote_url}/doc/{download_uri}"
+            overview_uri = download_uri.rpartition(".")[0] + ".png"
+            graphic_overview_url = f"{self.remote_url}/doc/{overview_uri}"
+        else:
+            download_url = None
+            graphic_overview_url = None
+        return resourcedescriptor.RecordDescription(
+            uuid=uuid.uuid4(),
+            point_of_contact=point_of_contact,
+            author=author,
+            date_stamp=date_stamp,
+            identification=resourcedescriptor.RecordIdentification(
+                name=raw_resource.get("title"),
+                title=raw_resource.get("title"),
+                date=date_stamp,
+                date_type="upload",
+                abstract=raw_resource.get("description", ""),
+                purpose=raw_resource.get("targetaudicent"),
+                originator=author,
+                graphic_overview_uri=graphic_overview_url,
+                place_keywords=[country] if country is not None else [],
+                other_keywords=tuple(),
+                license=[],
+                supplemental_information=(
+                    f"Cataloging source: {raw_resource.get('catalougingsource', '')}\n"
+                    f"General Note: {raw_resource.get('generalnote', '')}"
+                    f"ISBN: {raw_resource.get('isbn', '')}"
+                    f"ISSN: {raw_resource.get('issn', '')}"
+                )
+            ),
+            distribution=resourcedescriptor.RecordDistribution(
+                link_url=f"{self.remote_url}/document/{raw_resource['id']}",
+                thumbnail_url=graphic_overview_url,
+                original_format_url=download_url,
+            ),
+        )
