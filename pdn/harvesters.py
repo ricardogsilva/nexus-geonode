@@ -48,6 +48,8 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
+        if self.remote_url.endswith("/"):
+            self.remote_url = self.remote_url[:-1]
         self._api_client = PostgRestClient(self.base_api_url, page_size=page_size)
         self.harvest_alerts = harvest_alerts
         self.harvest_documents = harvest_documents
@@ -198,7 +200,10 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
         result = None
         if raw_resource is not None:
             if harvestable_resource.remote_resource_type == PdnResourceType.DOCUMENT.value:
-                resource_descriptor = self._get_resource_descriptor_for_document_resource(raw_resource)
+                resource_descriptor = self._get_resource_descriptor_for_document_resource(
+                    raw_resource,
+                    harvestable_resource,
+                )
                 result = base.HarvestedResourceInfo(
                     resource_descriptor=resource_descriptor,
                     additional_information=None
@@ -267,15 +272,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             }
         )
 
-    # def _update_document_record(
-    #         self,
-    #         harvested_info: base.HarvestedResourceInfo,
-    #         harvestable_resource: harvesting_models.HarvestableResource,
-    #         harvesting_session_id: int
-    # ):
-    #     # use the default implementation of the base class
-    #     return super().update_geonode_resource(harvested_info, harvestable_resource, harvesting_session_id)
-
     def _update_expert_record(
             self,
             harvested_info: base.HarvestedResourceInfo,
@@ -289,10 +285,10 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 "name": raw_record.get("name", ""),
                 "title": raw_record.get("title", ""),
                 "country": raw_record.get("country", ""),
-                "country_code": raw_record.get("country_code", ""),
+                "country_code": raw_record.get("country_code") or "",
                 "email": raw_record.get("email", ""),
                 "ministry": raw_record.get("ministry", ""),
-                "country_id": raw_record.get("country_id", ""),
+                "country_id": raw_record.get("country_id") or "",
             }
         )
 
@@ -314,7 +310,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 "title": raw_record.get("title", ""),
                 "url": raw_record.get("url", ""),
                 "country": raw_record.get("country", ""),
-                "country_code": raw_record.get("country_code", ""),
+                "country_code": raw_record.get("country_code") or "",
                 "date": date_,
                 "source": raw_record.get("source", ""),
             }
@@ -469,7 +465,10 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
         return result
 
     def _get_resource_descriptor_for_document_resource(
-            self, raw_resource: typing.Dict) -> resourcedescriptor.RecordDescription:
+            self,
+            raw_resource: typing.Dict,
+            harvestable_resource: harvesting_models.HarvestableResource
+    ) -> resourcedescriptor.RecordDescription:
         raw_date_stamp = raw_resource.get("uploaddate")
         date_stamp = dateutil.parser.parse(raw_date_stamp) if raw_date_stamp is not None else None
         country = raw_resource.get("country")
@@ -490,8 +489,13 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
         else:
             download_url = None
             graphic_overview_url = None
+        # NOTE: PDN documents do not have a UUID. As such we generate one when first importing the resource and reuse it when updating it
+        if harvestable_resource.geonode_resource is not None:
+            uuid_ = uuid.UUID(harvestable_resource.geonode_resource.uuid)
+        else:
+            uuid_ = uuid.uuid4()
         return resourcedescriptor.RecordDescription(
-            uuid=uuid.uuid4(),
+            uuid=uuid_,
             point_of_contact=point_of_contact,
             author=author,
             date_stamp=date_stamp,
