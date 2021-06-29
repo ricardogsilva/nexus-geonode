@@ -1,0 +1,59 @@
+[
+    {
+        "model": "harvesting.harvester",
+        "pk": 1,
+        "fields": {
+            "name": "PCRAFI harvester",
+            "status": "ready",
+            "remote_url": "http://risk.spc.int/",
+            "scheduling_enabled": false,
+            "update_frequency": 60,
+            "remote_available": true,
+            "check_availability_frequency": 30,
+            "last_checked_availability": "2021-06-25T14:38:09.446Z",
+            "last_checked_harvestable_resources": "2021-06-25T14:37:44.061Z",
+            "last_check_harvestable_resources_message": "2021-06-25 14:37:44.061526+00:00 - Harvestable resources successfully checked",
+            "default_owner": 1000,
+            "default_access_permissions": {
+                "AnonymousUser": [
+                    "view"
+                ]
+            },
+            "harvest_new_resources_by_default": false,
+            "delete_orphan_resources_automatically": true,
+            "last_updated": "2021-06-25T14:38:26.543Z",
+            "harvester_type": "geonode.harvesting.harvesters.geonode.GeonodeLegacyHarvester",
+            "harvester_type_specific_configuration": {
+                "harvest_maps": false,
+                "harvest_layers": false
+            }
+        }
+    },
+    {
+        "model": "harvesting.harvester",
+        "pk": 2,
+        "fields": {
+            "name": "PDN harvester",
+            "status": "ready",
+            "remote_url": "http://www.pacificdisaster.net",
+            "scheduling_enabled": false,
+            "update_frequency": 60,
+            "remote_available": true,
+            "check_availability_frequency": 30,
+            "last_checked_availability": "2021-06-27T15:33:29.391Z",
+            "last_checked_harvestable_resources": "2021-06-27T15:21:21.420Z",
+            "last_check_harvestable_resources_message": "2021-06-27 15:21:21.420925+00:00 - Harvestable resources successfully checked",
+            "default_owner": 1000,
+            "default_access_permissions": {
+                "AnonymousUser": [
+                    "view"
+                ]
+            },
+            "harvest_new_resources_by_default": false,
+            "delete_orphan_resources_automatically": false,
+            "last_updated": "2021-06-27T15:33:37.108Z",
+            "harvester_type": "pdn.harvesters.PdnHarvesterWorker",
+            "harvester_type_specific_configuration": {}
+        }
+    }
+]

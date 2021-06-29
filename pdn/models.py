@@ -6,10 +6,10 @@ class News(models.Model):
     source_id = models.BigIntegerField()
     title = models.CharField(max_length=250)
     url = models.CharField(max_length=1000)
-    country = models.CharField(max_length=25)
-    country_code = models.CharField(max_length=10)
+    country = models.CharField(max_length=255)
+    country_code = models.CharField(max_length=10, blank=True)
     date = models.DateTimeField()
-    source = models.CharField(max_length=100)
+    source = models.CharField(max_length=255)
 
 
 class Project(models.Model):
@@ -37,8 +37,8 @@ class Expert(models.Model):
     remote_id = models.BigIntegerField(unique=True)
     name = models.CharField(max_length=250)
     title = models.CharField(max_length=250)
-    country = models.CharField(max_length=25)
-    country_code = models.CharField(max_length=10)
+    country = models.CharField(max_length=255)
+    country_code = models.CharField(max_length=10, blank=True)
     email = models.CharField(max_length=250)
     ministry = models.CharField(max_length=250)
-    country_id = models.CharField(max_length=100)
+    country_id = models.CharField(max_length=100, blank=True)
