@@ -2,6 +2,69 @@
 {% block override_local_config %}
 <script>
     window.__GEONODE_CONFIG__.overrideLocalConfig = function(localConfig, _) {
+        localConfig.geoNodeConfiguration.menu.items = localConfig.geoNodeConfiguration.menu.items.filter((item) => item.labelId != 'gnhome.about');
+        localConfig.geoNodeConfiguration.menu.rightItems = [{
+                    "labelId": "gnhome.about",
+                    "type": "dropdown",
+                    "items": [
+                        {
+                            "type": "link",
+                            "href": "/people/",
+                            "labelId": "gnhome.people"
+                        },
+                        {
+                            "type": "link",
+                            "href": "/groups/",
+                            "labelId": "gnhome.groups"
+                        },
+                        {
+                            "type": "link",
+                            "href": "/groups/categories/",
+                            "labelId": "gnhome.groupsCategories"
+                        },
+                        {
+                            "type": "link",
+                            "href": "/announcements/",
+                            "labelId": "gnhome.announcements",
+                            "authenticated": true,
+                            "allowedRoles": [
+                                "admin"
+                            ]
+                        },
+                        {
+                            "type": "divider",
+                            "authenticated": true,
+                            "perms": [{ "type": "user", "value": "add_resource" }]
+                        },
+                        {
+                            "type": "link",
+                            "href": "/invitations/geonode-send-invite/",
+                            "labelId": "gnhome.inviteUsers",
+                            "authenticated": true,
+                            "perms": [{ "type": "user", "value": "add_resource" }]
+                        },
+                        {
+                            "type": "link",
+                            "href": "/admin/people/profile/add/",
+                            "labelId": "gnhome.addUser",
+                            "authenticated": true,
+                            "allowedRoles": [
+                                "admin"
+                            ],
+                            "perms": [{ "type": "user", "value": "add_resource" }]
+                        },
+                        {
+                            "type": "link",
+                            "href": "/groups/create/",
+                            "labelId": "gnhome.createGroup",
+                            "authenticated": true,
+                            "allowedRoles": [
+                                "admin"
+                            ],
+                            "perms": [{ "type": "user", "value": "add_resource" }]
+                        }
+                    ]
+                }];
         const config = _.mergeWith(localConfig, {
             "translationsPath": [
                 "/static/mapstore/ms-translations",
@@ -23,8 +86,8 @@
                     "variant": "light",
                     "color": "#388AC8",
                     "primary": {
-                        "color": "#ffffff",
-                        "bg": "#388AC8"
+                        "contrast": "#ffffff",
+                        "value": "#388AC8"
                     },
                     "navbar": {
                         "style": {
