@@ -248,6 +248,25 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             geonode_resource.save()
         return geonode_resource
 
+    def finalize_resource_deletion(self, harvestable_resource: harvesting_models.HarvestableResource):
+        record_class = {
+            PdnResourceType.ALERT: models.Alert,
+            PdnResourceType.EXPERT: models.Expert,
+            PdnResourceType.NEWS_ARTICLE: models.News,
+            PdnResourceType.PROJECT: models.Project,
+        }.get(PdnResourceType(harvestable_resource.remote_resource_type))
+        if record_class is not None:
+            remote_id = int(harvestable_resource.unique_identifier.rpartition(self._UNIQUE_ID_SEPARATOR)[-1])
+            logger.debug(f"remote_id: {remote_id}")
+            try:
+                record = record_class.objects.get(remote_id=remote_id)
+                record.delete()
+            except record_class.DoesNotExist:
+                logger.exception(
+                    f"Could not delete {harvestable_resource.remote_resource_type!r} record with remote "
+                    f"id {harvestable_resource.remote_resource_type}"
+                )
+
     def _update_alert_record(
             self,
             harvested_info: base.HarvestedResourceInfo,
