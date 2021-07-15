@@ -1,6 +1,15 @@
 #!/bin/bash
 set -e
 
+# Start cron && memcached services
+service cron restart
+service memcached restart
+
+echo $"\n\n\n"
+echo "-----------------------------------------------------"
+echo "STARTING DJANGO ENTRYPOINT $(date)"
+echo "-----------------------------------------------------"
+
 /usr/local/bin/invoke update >> /usr/src/nexus/invoke.log
 
 source $HOME/.bashrc

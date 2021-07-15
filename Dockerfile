@@ -1,4 +1,4 @@
-FROM python:3.8.7-buster
+FROM python:3.8.8-buster
 LABEL GeoNode Development Team
 
 RUN mkdir -p /usr/src/nexus
@@ -65,4 +65,4 @@ RUN cd /usr/src; git clone https://github.com/GeoNode/geonode-contribs.git -b ma
 RUN cd /usr/src/geonode-contribs/geonode-logstash; pip install --upgrade -e . \
 	cd /usr/src/geonode-contribs/ldap; pip install --upgrade -e .
 
-ENTRYPOINT service cron restart && service memcached restart && /usr/src/nexus/entrypoint.sh
+ENTRYPOINT /usr/src/nexus/entrypoint.sh
