@@ -1,0 +1,82 @@
+[
+    {
+        "model": "base.menu",
+        "pk": 1,
+        "fields": {
+            "title": "Alerts",
+            "placeholder": 2,
+            "order": 0
+        }
+    },
+    {
+        "model": "base.menu",
+        "pk": 2,
+        "fields": {
+            "title": "Projects",
+            "placeholder": 2,
+            "order": 1
+        }
+    },
+    {
+        "model": "base.menu",
+        "pk": 3,
+        "fields": {
+            "title": "News",
+            "placeholder": 2,
+            "order": 2
+        }
+    },
+    {
+        "model": "base.menu",
+        "pk": 4,
+        "fields": {
+            "title": "Experts",
+            "placeholder": 2,
+            "order": 3
+        }
+    },
+    {
+        "model": "base.menuitem",
+        "pk": 1,
+        "fields": {
+            "title": "Alerts",
+            "menu": 1,
+            "order": 0,
+            "blank_target": false,
+            "url": "/pdn/alerts"
+        }
+    },
+    {
+        "model": "base.menuitem",
+        "pk": 2,
+        "fields": {
+            "title": "News",
+            "menu": 3,
+            "order": 0,
+            "blank_target": false,
+            "url": "/pdn/news"
+        }
+    },
+    {
+        "model": "base.menuitem",
+        "pk": 3,
+        "fields": {
+            "title": "Projects",
+            "menu": 2,
+            "order": 0,
+            "blank_target": false,
+            "url": "/pdn/projects"
+        }
+    },
+    {
+        "model": "base.menuitem",
+        "pk": 4,
+        "fields": {
+            "title": "Experts",
+            "menu": 4,
+            "order": 0,
+            "blank_target": false,
+            "url": "/pdn/experts"
+        }
+    }
+]
