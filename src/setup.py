@@ -29,7 +29,7 @@ def read(*rnames):
 
 setup(
     name="nexus",
-    version="3.1",
+    version="3.2",
     author="",
     author_email="",
     description="nexus, based on GeoNode",
