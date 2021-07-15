@@ -77,4 +77,4 @@ RUN pip install --upgrade  -e .
 EXPOSE 8000
 
 # We provide no command or entrypoint as this image can be used to serve the django project or run celery tasks
-# ENTRYPOINT /usr/src/{{project_name}}/entrypoint.sh
+# ENTRYPOINT /usr/src/nexus/entrypoint.sh

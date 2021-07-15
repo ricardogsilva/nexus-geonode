@@ -73,7 +73,7 @@ else
     then
         echo "Executing Celery server $cmd for Production"
     else
-    
+
         invoke migrations
         invoke prepare
 
