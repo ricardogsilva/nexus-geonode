@@ -1,5 +1,5 @@
 FROM python:3.8.7-buster
-LABEL GeoNode development team
+LABEL GeoNode Development Team
 
 RUN mkdir -p /usr/src/nexus
 
