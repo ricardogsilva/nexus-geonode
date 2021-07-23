@@ -1,22 +1,17 @@
 from django.shortcuts import render
-from django.views.generic.base import TemplateView
+from django.views.generic import ListView
 
-class NewsPageView(TemplateView):
+from pdn.models import *
 
-    template_name = "pdn/news.html"
+class NewsPageView(ListView):
+    model = News
 
+class ProjectsPageView(ListView):
+    model = Project
 
-class ProjectsPageView(TemplateView):
+class AlertsPageView(ListView):
+    model = Alert
 
-    template_name = "pdn/projects.html"
-
-
-class AlertsPageView(TemplateView):
-
-    template_name = "pdn/alerts.html"
-
-
-class ExpertsPageView(TemplateView):
-
-    template_name = "pdn/experts.html"
+class ExpertsPageView(ListView):
+    model = Expert
 
