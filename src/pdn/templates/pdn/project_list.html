@@ -1,0 +1,11 @@
+{% extends "page.html" %}
+{% block container %}
+<div class="pdn-custom-page-container">
+    <p class="h2">PDN Projects</p>
+    <ul class="list-group">
+    {% for data in object_list %}
+    <li class="list-group-item bordertopbottom"><a href="{{data.url}}" target="_blank">{{data.name}}</a></li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}
