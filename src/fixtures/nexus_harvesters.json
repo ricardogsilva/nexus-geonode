@@ -10,23 +10,20 @@
             "update_frequency": 60,
             "remote_available": true,
             "check_availability_frequency": 30,
-            "last_checked_availability": "2021-06-25T14:38:09.446Z",
-            "last_checked_harvestable_resources": "2021-06-25T14:37:44.061Z",
-            "last_check_harvestable_resources_message": "2021-06-25 14:37:44.061526+00:00 - Harvestable resources successfully checked",
+            "last_checked_availability": "2021-06-29T22:37:39.341Z",
+            "last_checked_harvestable_resources": "2021-06-29T22:36:27.467Z",
+            "last_check_harvestable_resources_message": "2021-06-29 22:36:27.467907+00:00 - Harvestable resources successfully checked",
             "default_owner": 1000,
-            "default_access_permissions": {
-                "AnonymousUser": [
-                    "view"
-                ]
-            },
             "harvest_new_resources_by_default": false,
             "delete_orphan_resources_automatically": true,
-            "last_updated": "2021-06-25T14:38:26.543Z",
+            "last_updated": "2021-06-29T22:38:43.534Z",
             "harvester_type": "geonode.harvesting.harvesters.geonode.GeonodeLegacyHarvester",
             "harvester_type_specific_configuration": {
                 "harvest_maps": false,
                 "harvest_layers": false
-            }
+            },
+            "periodic_task": 1,
+            "availability_check_task": 2
         }
     },
     {
@@ -40,20 +37,22 @@
             "update_frequency": 60,
             "remote_available": true,
             "check_availability_frequency": 30,
-            "last_checked_availability": "2021-06-27T15:33:29.391Z",
-            "last_checked_harvestable_resources": "2021-06-27T15:21:21.420Z",
-            "last_check_harvestable_resources_message": "2021-06-27 15:21:21.420925+00:00 - Harvestable resources successfully checked",
+            "last_checked_availability": "2021-07-23T13:22:03.141Z",
+            "last_checked_harvestable_resources": "2021-07-23T13:19:36.292Z",
+            "last_check_harvestable_resources_message": "2021-07-23 13:19:36.292405+00:00 - Harvestable resources successfully checked",
             "default_owner": 1000,
-            "default_access_permissions": {
-                "AnonymousUser": [
-                    "view"
-                ]
-            },
             "harvest_new_resources_by_default": false,
             "delete_orphan_resources_automatically": false,
-            "last_updated": "2021-06-27T15:33:37.108Z",
+            "last_updated": "2021-07-23T13:22:06.181Z",
             "harvester_type": "pdn.harvesters.PdnHarvesterWorker",
-            "harvester_type_specific_configuration": {}
+            "harvester_type_specific_configuration": {
+                "harvest_alerts": false,
+                "harvest_experts": false,
+                "harvest_projects": true,
+                "harvest_documents": false
+            },
+            "periodic_task": 3,
+            "availability_check_task": 4
         }
     }
 ]
