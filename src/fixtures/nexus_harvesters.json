@@ -18,10 +18,7 @@
             "delete_orphan_resources_automatically": true,
             "last_updated": "2021-06-29T22:38:43.534Z",
             "harvester_type": "geonode.harvesting.harvesters.geonode.GeonodeLegacyHarvester",
-            "harvester_type_specific_configuration": {
-                "harvest_maps": false,
-                "harvest_layers": false
-            },
+            "harvester_type_specific_configuration": {},
             "periodic_task": 1,
             "availability_check_task": 2
         }
@@ -45,12 +42,7 @@
             "delete_orphan_resources_automatically": false,
             "last_updated": "2021-07-23T13:22:06.181Z",
             "harvester_type": "pdn.harvesters.PdnHarvesterWorker",
-            "harvester_type_specific_configuration": {
-                "harvest_alerts": false,
-                "harvest_experts": false,
-                "harvest_projects": true,
-                "harvest_documents": false
-            },
+            "harvester_type_specific_configuration": {},
             "periodic_task": 3,
             "availability_check_task": 4
         }
