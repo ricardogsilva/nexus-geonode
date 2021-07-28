@@ -1,3 +1,4 @@
+{% load static %}
 {% block content %}
 <style>
     .msgapi .gn-theme {
@@ -61,6 +62,15 @@
         --gn-button-tray-disabled-border-color: #ffffff;
         --gn-button-tray-badge-color: #ffffff;
         --gn-button-tray-badge-bg: #1a1a1a;
+    }
+
+    #gn-hero {
+        background-image: url('{% static 'img/polynesia-hero.jpg' %}');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-color: rgb(156, 156, 156);
+        background-blend-mode: multiply;
     }
 
     .msgapi .pdn-custom-page-container {
