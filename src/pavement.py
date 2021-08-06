@@ -432,7 +432,7 @@ def sync(options):
     if 'django_celery_beat' in INSTALLED_APPS:
         sh("%s python -W ignore manage.py loaddata fixtures/django_celery_beat.json" % settings)
     sh("%s python -W ignore manage.py loaddata fixtures/nexus_harvesters.json" % settings)
-    sh("%s python -W ignore manage.py set_all_layers_alternate" % settings)
+    sh("%s python -W ignore manage.py set_all_datasets_alternate" % settings)
 
 
 @task
