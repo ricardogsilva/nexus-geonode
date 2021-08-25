@@ -4,6 +4,7 @@ import logging
 import typing
 import uuid
 
+import datetime
 import dateutil.parser
 from geonode.base.models import ResourceBase
 from geonode.documents.models import Document
@@ -45,6 +46,14 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvest_news: typing.Optional[bool] = True,
             harvest_projects: typing.Optional[bool] = True,
             page_size: typing.Optional[int] = 10,
+            document_publication_day_filter: typing.Optional[int] = None,
+            document_publication_month_filter: typing.Optional[int] = None,
+            document_publication_year_filter: typing.Optional[int] = None,
+            alerts_start_date_filter: typing.Optional[str] = None,
+            alerts_end_date_filter: typing.Optional[str] = None,
+            news_start_date_filter: typing.Optional[str] = None,
+            news_end_date_filter: typing.Optional[str] = None,
+            project_active_filter: typing.Optional[bool] = None,
             **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -56,6 +65,14 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
         self.harvest_experts = harvest_experts
         self.harvest_news = harvest_news
         self.harvest_projects = harvest_projects
+        self.document_publication_day_filter = document_publication_day_filter
+        self.document_publication_month_filter = document_publication_month_filter
+        self.document_publication_year_filter = document_publication_year_filter
+        self.alerts_start_date_filter = alerts_start_date_filter
+        self.alerts_end_date_filter = alerts_end_date_filter
+        self.news_start_date_filter = news_start_date_filter
+        self.news_end_date_filter = news_end_date_filter
+        self.project_active_filter = project_active_filter
 
     @property
     def base_api_url(self):
@@ -81,6 +98,22 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 "harvest_news", True),
             harvest_projects=harvester.harvester_type_specific_configuration.get(
                 "harvest_projects", True),
+            document_publication_day_filter=harvester.harvester_type_specific_configuration.get(
+                "document_publication_day_filter"),
+            document_publication_month_filter=harvester.harvester_type_specific_configuration.get(
+                "document_publication_month_filter"),
+            document_publication_year_filter=harvester.harvester_type_specific_configuration.get(
+                "document_publication_year_filter"),
+            alerts_start_date_filter=harvester.harvester_type_specific_configuration.get(
+                "alerts_start_date_filter"),
+            alerts_end_date_filter=harvester.harvester_type_specific_configuration.get(
+                "alerts_end_date_filter"),
+            news_start_date_filter=harvester.harvester_type_specific_configuration.get(
+                "news_start_date_filter"),
+            news_end_date_filter=harvester.harvester_type_specific_configuration.get(
+                "news_end_date_filter"),
+            project_active_filter=harvester.harvester_type_specific_configuration.get(
+                "project_active_filter"),
         )
 
     @classmethod
@@ -115,6 +148,40 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 "harvest_projects": {
                     "type": "boolean",
                     "default": True
+                },
+                "document_publication_day_filter": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 31
+                },
+                "document_publication_month_filter": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                },
+                "document_publication_year_filter": {
+                    "type": "integer",
+                    "minimum": 1900,
+                    "maximum": 9999
+                },
+                "alerts_start_date_filter": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "alerts_end_date_filter": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "news_start_date_filter": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "news_end_date_filter": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "project_active_filter": {
+                    "type": "boolean"
                 },
             },
             "additionalProperties": False,
@@ -335,6 +402,66 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             }
         )
 
+    def _get_document_params(self) -> typing.Dict:
+        params = {}
+        if self.document_publication_day_filter is not None:
+            params["publicationday"] = f'eq.{self.document_publication_day_filter}'
+        if self.document_publication_month_filter is not None:
+            params["publicationmonth"] = f'eq.{self.document_publication_month_filter}'
+        if self.document_publication_year_filter is not None:
+            params["publicationyear"] = f'eq.{self.document_publication_year_filter}'
+        return params
+
+    def _get_news_article_params(self) -> typing.Dict:
+        params = {}
+        start_date = None
+        if self.news_start_date_filter is not None:
+            start_date = dateutil.parser.parse(self.news_start_date_filter)
+            start_date = start_date.astimezone(
+                datetime.timezone.utc).replace(microsecond=0).isoformat().split('+')[0] + 'Z'
+        end_date = None
+        if self.news_end_date_filter is not None:
+            end_date = dateutil.parser.parse(self.news_end_date_filter)
+            end_date = end_date.astimezone(
+                datetime.timezone.utc).replace(microsecond=0).isoformat().split('+')[0] + 'Z'
+
+        if start_date and end_date:
+            params["and"] = f'(date.gte.{start_date},date.lte.{end_date})'
+        elif start_date:
+            params["date"] = f'gte.{start_date}'
+        elif end_date:
+            params["date"] = f'lte.{end_date}'
+        return params
+
+    def _get_alert_params(self) -> typing.Dict:
+        params = {}
+        start_date = None
+        if self.alerts_start_date_filter is not None:
+            start_date = dateutil.parser.parse(self.alerts_start_date_filter)
+            start_date = start_date.astimezone(
+                datetime.timezone.utc).replace(microsecond=0).isoformat().split('+')[0] + 'Z'
+        end_date = None
+        if self.alerts_end_date_filter is not None:
+            end_date = dateutil.parser.parse(self.alerts_end_date_filter)
+            end_date = end_date.astimezone(
+                datetime.timezone.utc).replace(microsecond=0).isoformat().split('+')[0] + 'Z'
+        if start_date and end_date:
+            params["and"] = f'(daterecieved.gte.{start_date},daterecieved.lte.{end_date})'  # this is typo from PDN
+        elif start_date:
+            params["daterecieved"] = f'gte.{start_date}'  # this is typo from PDN
+        elif end_date:
+            params["daterecieved"] = f'lte.{end_date}'  # this is typo from PDN
+        return params
+
+    def _get_project_params(self) -> typing.Dict:
+        params = {}
+        if self.project_active_filter is not None:
+            params["active"] = f'is.{self.project_active_filter}'.lower()
+        return params
+
+    def _get_expert_params(self) -> typing.Dict:
+        return {}
+
     def _list_resources_starting_from_alerts(self, offset: int) -> typing.List[base.BriefRemoteResource]:
         _page = self._api_client.page_size
         alert_list = self._list_brief_resources(PdnResourceType.ALERT, offset)
@@ -414,28 +541,47 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             PdnResourceType.PROJECT: 0,
         }
         if self.harvest_alerts:
-            result[PdnResourceType.ALERT] = self._api_client.get_total_records(f"/{PdnResourceType.ALERT.value}")
+            result[PdnResourceType.ALERT] = self._api_client.get_total_records(
+                f"/{PdnResourceType.ALERT.value}",
+                params=self._get_alert_params()
+            )
         if self.harvest_documents:
-            result[PdnResourceType.DOCUMENT] = self._api_client.get_total_records(f"/{PdnResourceType.DOCUMENT.value}")
+            result[PdnResourceType.DOCUMENT] = self._api_client.get_total_records(
+                f"/{PdnResourceType.DOCUMENT.value}",
+                params=self._get_document_params()
+            )
         if self.harvest_experts:
-            result[PdnResourceType.EXPERT] = self._api_client.get_total_records(f"/{PdnResourceType.EXPERT.value}")
+            result[PdnResourceType.EXPERT] = self._api_client.get_total_records(
+                f"/{PdnResourceType.EXPERT.value}",
+                params=self._get_expert_params()
+            )
         if self.harvest_news:
-            result[PdnResourceType.NEWS_ARTICLE] = self._api_client.get_total_records(f"/{PdnResourceType.NEWS_ARTICLE.value}")
+            result[PdnResourceType.NEWS_ARTICLE] = self._api_client.get_total_records(
+                f"/{PdnResourceType.NEWS_ARTICLE.value}",
+                params=self._get_news_article_params()
+            )
         if self.harvest_projects:
-            result[PdnResourceType.PROJECT] = self._api_client.get_total_records(f"/{PdnResourceType.PROJECT.value}")
+            result[PdnResourceType.PROJECT] = self._api_client.get_total_records(
+                f"/{PdnResourceType.PROJECT.value}",
+                params=self._get_project_params()
+            )
         return result
 
     def _list_brief_resources(self, resource_type: PdnResourceType, offset: int):
-        should_list = {
-            PdnResourceType.ALERT: self.harvest_alerts,
-            PdnResourceType.DOCUMENT: self.harvest_documents,
-            PdnResourceType.EXPERT: self.harvest_experts,
-            PdnResourceType.NEWS_ARTICLE: self.harvest_news,
-            PdnResourceType.PROJECT: self.harvest_projects,
-        }[resource_type]
+        should_list, params_handler = {
+            PdnResourceType.ALERT: (self.harvest_alerts, self._get_alert_params),
+            PdnResourceType.DOCUMENT: (self.harvest_documents, self._get_document_params),
+            PdnResourceType.EXPERT: (self.harvest_experts, self._get_expert_params),
+            PdnResourceType.NEWS_ARTICLE: (self.harvest_news, self._get_news_article_params),
+            PdnResourceType.PROJECT: (self.harvest_projects, self._get_project_params),
+        }.get(resource_type, (False, None))
         result = []
         if should_list:
-            raw_result = self._api_client.get_paginated_resources(f"/{resource_type.value}", offset)
+            raw_result = self._api_client.get_paginated_resources(
+                f"/{resource_type.value}",
+                offset,
+                params=params_handler()
+            )
             for record in raw_result:
                 if resource_type == PdnResourceType.ALERT:
                     title = f"{record['subject']} - {record.get('daterecieved', '')}"

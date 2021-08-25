@@ -28,7 +28,11 @@ class PostgRestClient:
         response = self.http_session.get(self.api_base_url, timeout=self.request_timeout_seconds)
         return response.status_code == requests.codes.ok
 
-    def get_total_records(self, endpoint: str) -> int:
+    def get_total_records(
+            self,
+            endpoint: str,
+            params: typing.Optional[typing.Dict] = None
+    ) -> int:
         url = f"{self.api_base_url}{endpoint}"
         logger.info(f"url: {url}")
         response = self.http_session.get(
@@ -38,9 +42,10 @@ class PostgRestClient:
                 "Range": "0-0",
                 "Prefer": "count=exact",
             },
+            params=params,
             timeout=self.request_timeout_seconds
         )
-        if response.status_code == requests.codes.partial_content:
+        if response.status_code in (requests.codes.partial_content, requests.codes.ok):
             content_range = response.headers["Content-Range"]
             result = int(content_range.rpartition("/")[-1])
         else:
@@ -54,7 +59,8 @@ class PostgRestClient:
     def get_paginated_resources(
             self,
             endpoint: str,
-            offset: typing.Optional[int] = 0
+            offset: typing.Optional[int] = 0,
+            params: typing.Optional[typing.Dict] = None
     ) -> typing.List[typing.Dict]:
         url = f"{self.api_base_url}{endpoint}"
         limit = offset + (self.page_size - 1)
@@ -65,6 +71,7 @@ class PostgRestClient:
                 "Range": f"{offset}-{limit}",
                 "Accept": "application/json",
             },
+            params=params,
             timeout=self.request_timeout_seconds
         )
         if response.status_code == requests.codes.ok:
