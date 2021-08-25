@@ -232,19 +232,18 @@ def prepare(ctx):
 @task
 def fixtures(ctx):
     print("**************************fixtures********************************")
-    settings_path = _localsettings()
-    fixture_names = [
-        "sample_admin",
-        "/tmp/default_oauth_apps_docker.json",
-        "/tmp/default_site.json",
-        "/usr/src/nexus/fixtures/initial_data.json",
-        "/usr/src/nexus/fixtures/nexus_harvesters.json",
-    ]
-    for fixture in fixture_names:
-        ctx.run(f"python manage.py loaddata {fixture} --settings={settings_path}", pty=True)
-    ctx.run(f"python manage.py set_all_layers_alternate --settings={settings_path}", pty=True)
-#     ctx.run("python manage.py set_all_layers_metadata -d \
-# --settings={0}".format(_localsettings()), pty=True)
+    ctx.run("python manage.py loaddata sample_admin \
+    --settings={0}".format(_localsettings()), pty=True)
+    ctx.run("python manage.py loaddata /tmp/default_oauth_apps_docker.json \
+    --settings={0}".format(_localsettings()), pty=True)
+    ctx.run("python manage.py loaddata /tmp/default_site.json \
+    --settings={0}".format(_localsettings()), pty=True)
+    ctx.run("python manage.py loaddata /usr/src/nexus/fixtures/initial_data.json \
+    --settings={0}".format(_localsettings()), pty=True)
+    ctx.run("python manage.py set_all_datasets_alternate \
+    --settings={0}".format(_localsettings()), pty=True)
+    #     ctx.run("python manage.py set_all_datasets_metadata -d \
+    # --settings={0}".format(_localsettings()), pty=True)
 
 
 @task
@@ -270,6 +269,13 @@ def monitoringfixture(ctx):
 --settings={_localsettings()}", pty=True)
     except Exception as e:
         logger.error(f"ERROR installing monitoring fixture: {str(e)}")
+
+
+@task
+def nexusfixture(ctx):
+    print("************************** nexus fixture ********************************")
+    ctx.run("python manage.py loaddata /usr/src/nexus/fixtures/nexus_harvesters.json \
+    --settings={0}".format(_localsettings()), pty=True)
 
 
 @task

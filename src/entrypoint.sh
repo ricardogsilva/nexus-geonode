@@ -53,6 +53,7 @@ then
     invoke migrations
     invoke prepare
     invoke fixtures
+    invoke nexusfixture
 
     if [ ${IS_CELERY} = "true" ] || [ ${IS_CELERY} = "True" ]
     then
@@ -80,6 +81,7 @@ else
         if [ ${FORCE_REINIT} = "true" ]  || [ ${FORCE_REINIT} = "True" ] || [ ! -e "/mnt/volumes/statics/geonode_init.lock" ]; then
             invoke updategeoip
             invoke fixtures
+            invoke nexusfixture
             invoke monitoringfixture
             invoke initialized
         fi
