@@ -1,3 +1,4 @@
+{% load static %}
 {% block content %}
 <style>
     .msgapi .gn-theme {
@@ -61,6 +62,48 @@
         --gn-button-tray-disabled-border-color: #ffffff;
         --gn-button-tray-badge-color: #ffffff;
         --gn-button-tray-badge-bg: #1a1a1a;
+    }
+
+    #gn-hero {
+        background-image: url('{% static 'img/polynesia-hero.jpg' %}');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-color: rgb(156, 156, 156);
+        background-blend-mode: multiply;
+    }
+
+    .msgapi .pdn-custom-page-container {
+        max-width:1024px;
+        margin: 0 auto;
+        margin-bottom: 50px;
+    }
+
+    .msgapi .pdn-custom-page-container .h2 {
+        padding: 0.5rem 0px 0.5rem 0px;
+        font-family: inherit;
+        font-size: 2rem;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .msgapi .pdn-custom-page-container .list-group-item {
+        padding: 10px 0px;
+    }
+
+    .msgapi .pdn-custom-page-container .list-group-item.bordertopbottom { 
+        border-left: 0 none;
+        border-right: 0 none;
+        border-top: 1px solid #dddddd;
+        border-bottom: 1px solid #dddddd;
+    }
+
+    .msgapi .pdn-custom-page-container .list-group-item:nth-child(1){
+        border-top: 0 none;
+    }
+
+    .msgapi .pdn-custom-page-container small{
+        font-size: 75%;
     }
 </style>
 {% endblock %}

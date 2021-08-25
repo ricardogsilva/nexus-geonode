@@ -1,4 +1,5 @@
 {% extends "geonode-mapstore-client/snippets/brand_navbar.html" %}
+{% load static %}
 {% block extra_style %}
 <style>
     #gn-brand-navbar {
@@ -7,4 +8,7 @@
         background-position: center center;
     }
 </style>
+{% endblock %}
+{% block logo_src %}
+{% static 'img/logo.png' %}
 {% endblock %}
