@@ -233,17 +233,17 @@ def prepare(ctx):
 def fixtures(ctx):
     print("**************************fixtures********************************")
     ctx.run("python manage.py loaddata sample_admin \
-    --settings={0}".format(_localsettings()), pty=True)
+--settings={0}".format(_localsettings()), pty=True)
     ctx.run("python manage.py loaddata /tmp/default_oauth_apps_docker.json \
-    --settings={0}".format(_localsettings()), pty=True)
+--settings={0}".format(_localsettings()), pty=True)
     ctx.run("python manage.py loaddata /tmp/default_site.json \
-    --settings={0}".format(_localsettings()), pty=True)
+--settings={0}".format(_localsettings()), pty=True)
     ctx.run("python manage.py loaddata /usr/src/nexus/fixtures/initial_data.json \
-    --settings={0}".format(_localsettings()), pty=True)
+--settings={0}".format(_localsettings()), pty=True)
     ctx.run("python manage.py set_all_datasets_alternate \
-    --settings={0}".format(_localsettings()), pty=True)
-    #     ctx.run("python manage.py set_all_datasets_metadata -d \
-    # --settings={0}".format(_localsettings()), pty=True)
+--settings={0}".format(_localsettings()), pty=True)
+#     ctx.run("python manage.py set_all_datasets_metadata -d \
+# --settings={0}".format(_localsettings()), pty=True)
 
 
 @task
