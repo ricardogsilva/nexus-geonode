@@ -57,8 +57,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
-        if self.remote_url.endswith("/"):
-            self.remote_url = self.remote_url[:-1]
+        self.remote_url = self.remote_url.rstrip("/")
         self._api_client = PostgRestClient(self.base_api_url, page_size=page_size)
         self.harvest_alerts = harvest_alerts
         self.harvest_documents = harvest_documents
@@ -286,7 +285,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int,
     ):
         handler = {
             PdnResourceType.ALERT: self._update_alert_record,
@@ -296,7 +294,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             PdnResourceType.PROJECT: self._update_project_record,
         }.get(PdnResourceType(harvestable_resource.remote_resource_type))
         if handler is not None:
-            return handler(harvested_info, harvestable_resource, harvesting_session_id)
+            handler(harvested_info, harvestable_resource)
         else:
             raise RuntimeError(f"Invalid resource type: {harvestable_resource.remote_resource_type}")
 
@@ -338,7 +336,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         try:
@@ -362,7 +359,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         models.Expert.objects.update_or_create(
@@ -382,7 +378,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         try:
@@ -406,7 +401,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         models.Project.objects.update_or_create(
