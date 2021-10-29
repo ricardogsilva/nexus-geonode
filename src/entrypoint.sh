@@ -78,16 +78,17 @@ else
         invoke prepare
 
         if [ ${FORCE_REINIT} = "true" ]  || [ ${FORCE_REINIT} = "True" ] || [ ! -e "/mnt/volumes/statics/geonode_init.lock" ]; then
+            echo "LOG INIT" > /usr/src/nexus/invoke.log
             invoke updategeoip
             invoke fixtures
             invoke monitoringfixture
             invoke initialized
+            invoke updateadmin
         fi
 
         invoke statics
         invoke waitforgeoserver
         invoke geoserverfixture
-        invoke updateadmin
 
         echo "Executing UWSGI server $cmd for Production"
     fi
