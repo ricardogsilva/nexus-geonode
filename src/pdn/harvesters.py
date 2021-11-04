@@ -57,8 +57,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
-        if self.remote_url.endswith("/"):
-            self.remote_url = self.remote_url[:-1]
+        self.remote_url = self.remote_url.rstrip("/")
         self._api_client = PostgRestClient(self.base_api_url, page_size=page_size)
         self.harvest_alerts = harvest_alerts
         self.harvest_documents = harvest_documents
@@ -259,7 +258,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
     def get_resource(
             self,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> typing.Optional[resourcedescriptor.RecordDescription]:
         """Harvest a single resource from the remote service"""
         remote_id = harvestable_resource.unique_identifier.rpartition(self._UNIQUE_ID_SEPARATOR)[-1]
@@ -282,11 +280,19 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 )
         return result
 
+    def get_geonode_resource_defaults(
+            self,
+            harvested_info: base.HarvestedResourceInfo,
+            harvestable_resource: harvesting_models.HarvestableResource,
+    ) -> typing.Dict:
+        defaults = super().get_geonode_resource_defaults(harvested_info, harvestable_resource)
+        defaults["doc_url"] = harvested_info.resource_descriptor.distribution.download_url
+        return defaults
+
     def update_geonode_resource(
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int,
     ):
         handler = {
             PdnResourceType.ALERT: self._update_alert_record,
@@ -296,24 +302,9 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             PdnResourceType.PROJECT: self._update_project_record,
         }.get(PdnResourceType(harvestable_resource.remote_resource_type))
         if handler is not None:
-            return handler(harvested_info, harvestable_resource, harvesting_session_id)
+            handler(harvested_info, harvestable_resource)
         else:
             raise RuntimeError(f"Invalid resource type: {harvestable_resource.remote_resource_type}")
-
-    def finalize_resource_update(
-            self,
-            geonode_resource: ResourceBase,
-            harvested_info: base.HarvestedResourceInfo,
-            harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
-    ) -> ResourceBase:
-        if harvestable_resource.remote_resource_type != PdnResourceType.DOCUMENT.value:
-            raise RuntimeError(f"Unexpected resource type: {harvestable_resource.remote_resource_type}")
-        else:
-            geonode_resource.thumbnail_url = harvested_info.resource_descriptor.distribution.thumbnail_url
-            geonode_resource.doc_url = harvested_info.resource_descriptor.distribution.original_format_url
-            geonode_resource.save()
-        return geonode_resource
 
     def finalize_resource_deletion(self, harvestable_resource: harvesting_models.HarvestableResource):
         record_class = {
@@ -338,7 +329,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         try:
@@ -362,7 +352,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         models.Expert.objects.update_or_create(
@@ -382,7 +371,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         try:
@@ -406,7 +394,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             self,
             harvested_info: base.HarvestedResourceInfo,
             harvestable_resource: harvesting_models.HarvestableResource,
-            harvesting_session_id: int
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
         models.Project.objects.update_or_create(
@@ -664,6 +651,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             point_of_contact=point_of_contact,
             author=author,
             date_stamp=date_stamp,
+            reference_systems=["EPSG:4326"],
             identification=resourcedescriptor.RecordIdentification(
                 name=raw_resource.get("title"),
                 title=raw_resource.get("title"),
@@ -672,7 +660,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 abstract=raw_resource.get("description", ""),
                 purpose=raw_resource.get("targetaudicent"),
                 originator=author,
-                graphic_overview_uri=graphic_overview_url,
                 place_keywords=[country] if country is not None else [],
                 other_keywords=tuple(),
                 license=[],
@@ -686,6 +673,10 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             distribution=resourcedescriptor.RecordDistribution(
                 link_url=f"{self.remote_url}/document/{raw_resource['id']}",
                 thumbnail_url=graphic_overview_url,
-                original_format_url=download_url,
+                download_url=download_url,
             ),
+            additional_parameters={
+                "extension": raw_resource.get("filename", "").rpartition(".")[-1],
+                "doc_url": download_url,
+            }
         )
