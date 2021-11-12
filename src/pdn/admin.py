@@ -7,9 +7,12 @@ class AlertAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "remote_id",
-        "subject",
-        "daterecieved",
-        "countries",
+        "title",
+        "summary",
+        "link",
+        "gdacs_eventtype",
+        "gdacs_eventid",
+        "gdacs_country",
     )
 
 
