@@ -4,7 +4,10 @@
     <p class="h2">PDN Alerts</p>
     <ul class="list-group">
     {% for data in object_list %}
-    <li class="list-group-item bordertopbottom">{{data.subject}}</li>
+    <li class="list-group-item bordertopbottom">
+        <div><a href="{{data.link}}" target="_blank">{{data.title}}</a><div>
+        <div>{{data.summary}}</div>
+    </li>
     {% endfor %}
     </ul>
 </div>

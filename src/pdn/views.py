@@ -11,6 +11,7 @@ class ProjectsPageView(ListView):
 
 class AlertsPageView(ListView):
     model = Alert
+    ordering = ['-id']
 
 class ExpertsPageView(ListView):
     model = Expert
