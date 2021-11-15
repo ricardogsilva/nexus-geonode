@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class PdnResourceType(enum.Enum):
-    ALERT = "alert"
+    ALERT = "recent_alerts"
     DOCUMENT = "document"
     EXPERT = "experts"
     NEWS_ARTICLE = "news"
@@ -49,8 +49,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             document_publication_day_filter: typing.Optional[int] = None,
             document_publication_month_filter: typing.Optional[int] = None,
             document_publication_year_filter: typing.Optional[int] = None,
-            alerts_start_date_filter: typing.Optional[str] = None,
-            alerts_end_date_filter: typing.Optional[str] = None,
             news_start_date_filter: typing.Optional[str] = None,
             news_end_date_filter: typing.Optional[str] = None,
             project_active_filter: typing.Optional[bool] = None,
@@ -67,8 +65,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
         self.document_publication_day_filter = document_publication_day_filter
         self.document_publication_month_filter = document_publication_month_filter
         self.document_publication_year_filter = document_publication_year_filter
-        self.alerts_start_date_filter = alerts_start_date_filter
-        self.alerts_end_date_filter = alerts_end_date_filter
         self.news_start_date_filter = news_start_date_filter
         self.news_end_date_filter = news_end_date_filter
         self.project_active_filter = project_active_filter
@@ -103,10 +99,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 "document_publication_month_filter"),
             document_publication_year_filter=harvester.harvester_type_specific_configuration.get(
                 "document_publication_year_filter"),
-            alerts_start_date_filter=harvester.harvester_type_specific_configuration.get(
-                "alerts_start_date_filter"),
-            alerts_end_date_filter=harvester.harvester_type_specific_configuration.get(
-                "alerts_end_date_filter"),
             news_start_date_filter=harvester.harvester_type_specific_configuration.get(
                 "news_start_date_filter"),
             news_end_date_filter=harvester.harvester_type_specific_configuration.get(
@@ -162,14 +154,6 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                     "type": "integer",
                     "minimum": 1900,
                     "maximum": 9999
-                },
-                "alerts_start_date_filter": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "alerts_end_date_filter": {
-                    "type": "string",
-                    "format": "date-time"
                 },
                 "news_start_date_filter": {
                     "type": "string",
@@ -331,20 +315,58 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvestable_resource: harvesting_models.HarvestableResource,
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
-        try:
-            date_received = dateutil.parser.parse(raw_record["daterecieved"])
-        except KeyError:
-            date_received = None
         models.Alert.objects.update_or_create(
             remote_id=raw_record["id"],
             defaults={
-                "content": raw_record.get("content", ""),
-                "countries": raw_record.get("countries", ""),
-                "daterecieved": date_received,
-                "ignore": raw_record.get("ignore", False),
-                "subject": raw_record.get("subject", ""),
-                "uuid": raw_record.get("uuid", ""),
-                "source_id": raw_record.get("source_id", 0),
+                "title": raw_record.get("title") or "",
+                "title_detail": raw_record.get("title_detail") or "",
+                "summary": raw_record.get("summary") or "",
+                "summary_detail": raw_record.get("summary_detail") or "",
+                "links": raw_record.get("links") or "",
+                "gdacs_temporary": raw_record.get("gdacs_temporary") or "",
+                "link": raw_record.get("link") or "",
+                "published": raw_record.get("published") or "",
+                "published_parsed": raw_record.get("published_parsed") or "",
+                "gdacs_iscurrent": raw_record.get("gdacs_iscurrent") or "",
+                "gdacs_fromdate": raw_record.get("gdacs_fromdate") or "",
+                "gdacs_todate": raw_record.get("gdacs_todate") or "",
+                "gdacs_durationinweek": raw_record.get("gdacs_durationinweek") or "",
+                "gdacs_year": raw_record.get("gdacs_year") or "",
+                "tags": raw_record.get("tags") or "",
+                "uid": raw_record.get("uid") or "",
+                "guidislink": raw_record.get("guidislink") or "",
+                "geo_lat": raw_record.get("geo_lat") or "",
+                "geo_long": raw_record.get("geo_long") or "",
+                "geo_point": raw_record.get("geo_point") or "",
+                "gdacs_bbox": raw_record.get("gdacs_bbox") or "",
+                "gdacs_cap": raw_record.get("gdacs_cap") or "",
+                "gdacs_icon": raw_record.get("gdacs_icon") or "",
+                "gdacs_version": raw_record.get("gdacs_version") or "",
+                "gdacs_eventtype": raw_record.get("gdacs_eventtype") or "",
+                "gdacs_alertlevel": raw_record.get("gdacs_alertlevel") or "",
+                "gdacs_alertscore": raw_record.get("gdacs_alertscore") or "",
+                "gdacs_episodealertlevel": raw_record.get("gdacs_episodealertlevel") or "",
+                "gdacs_episodealertscore": raw_record.get("gdacs_episodealertscore") or "",
+                "gdacs_eventname": raw_record.get("gdacs_eventname") or "",
+                "gdacs_eventid": raw_record.get("gdacs_eventid") or "",
+                "gdacs_episodeid": raw_record.get("gdacs_episodeid") or "",
+                "gdacs_calculationtype": raw_record.get("gdacs_calculationtype") or "",
+                "gdacs_severity": raw_record.get("gdacs_severity") or "",
+                "gdacs_population": raw_record.get("gdacs_population") or "",
+                "gdacs_vulnerability": raw_record.get("gdacs_vulnerability") or "",
+                "gdacs_iso3": raw_record.get("gdacs_iso3") or "",
+                "gdacs_country": raw_record.get("gdacs_country") or "",
+                "gdacs_glide": raw_record.get("gdacs_glide") or "",
+                "gdacs_mapimage": raw_record.get("gdacs_mapimage") or "",
+                "gdacs_maplink": raw_record.get("gdacs_maplink") or "",
+                "gdacs_gtsimage": raw_record.get("gdacs_gtsimage") or "",
+                "gdacs_gtslink": raw_record.get("gdacs_gtslink") or "",
+                "gdacs_resource": raw_record.get("gdacs_resource") or "",
+                "gdacs_title": raw_record.get("gdacs_title") or "",
+                "gdacs_description": raw_record.get("gdacs_description") or "",
+                "gdacs_acknowledgements": raw_record.get("gdacs_acknowledgements") or "",
+                "gdacs_accesslevel": raw_record.get("gdacs_accesslevel") or "",
+                "gdacs_resources": raw_record.get("gdacs_resources") or "",
             }
         )
 
@@ -440,24 +462,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
         return params
 
     def _get_alert_params(self) -> typing.Dict:
-        params = {}
-        start_date = None
-        if self.alerts_start_date_filter is not None:
-            start_date = dateutil.parser.parse(self.alerts_start_date_filter)
-            start_date = start_date.astimezone(
-                datetime.timezone.utc).replace(microsecond=0).isoformat().split('+')[0] + 'Z'
-        end_date = None
-        if self.alerts_end_date_filter is not None:
-            end_date = dateutil.parser.parse(self.alerts_end_date_filter)
-            end_date = end_date.astimezone(
-                datetime.timezone.utc).replace(microsecond=0).isoformat().split('+')[0] + 'Z'
-        if start_date and end_date:
-            params["and"] = f'(daterecieved.gte.{start_date},daterecieved.lte.{end_date})'  # this is typo from PDN
-        elif start_date:
-            params["daterecieved"] = f'gte.{start_date}'  # this is typo from PDN
-        elif end_date:
-            params["daterecieved"] = f'lte.{end_date}'  # this is typo from PDN
-        return params
+        return {}
 
     def _get_project_params(self) -> typing.Dict:
         params = {}
@@ -590,7 +595,7 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             )
             for record in raw_result:
                 if resource_type == PdnResourceType.ALERT:
-                    title = f"{record['subject']} - {record.get('daterecieved', '')}"
+                    title = record.get('title') or ''
                 elif resource_type == PdnResourceType.DOCUMENT:
                     title_parts = [
                         record.get("country", ""),
