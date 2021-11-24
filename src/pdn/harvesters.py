@@ -315,6 +315,14 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
             harvestable_resource: harvesting_models.HarvestableResource,
     ) -> None:
         raw_record: typing.Dict = harvested_info.additional_information
+        try:
+            gdacs_fromdate_ = dateutil.parser.parse(raw_record["gdacs_fromdate"])
+        except dateutil.parser.ParserError:
+            gdacs_fromdate_ = None
+        try:
+            gdacs_todate_ = dateutil.parser.parse(raw_record["gdacs_todate"])
+        except dateutil.parser.ParserError:
+            gdacs_todate_ = None
         models.Alert.objects.update_or_create(
             remote_id=raw_record["id"],
             defaults={
@@ -328,8 +336,8 @@ class PdnHarvesterWorker(base.BaseHarvesterWorker):
                 "published": raw_record.get("published") or "",
                 "published_parsed": raw_record.get("published_parsed") or "",
                 "gdacs_iscurrent": raw_record.get("gdacs_iscurrent") or "",
-                "gdacs_fromdate": raw_record.get("gdacs_fromdate") or "",
-                "gdacs_todate": raw_record.get("gdacs_todate") or "",
+                "gdacs_fromdate": gdacs_fromdate_,
+                "gdacs_todate": gdacs_todate_,
                 "gdacs_durationinweek": raw_record.get("gdacs_durationinweek") or "",
                 "gdacs_year": raw_record.get("gdacs_year") or "",
                 "tags": raw_record.get("tags") or "",

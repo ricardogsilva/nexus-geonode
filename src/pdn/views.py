@@ -11,7 +11,7 @@ class ProjectsPageView(ListView):
 
 class AlertsPageView(ListView):
     model = Alert
-    ordering = ['-id']
+    ordering = ['-gdacs_fromdate']
 
 class ExpertsPageView(ListView):
     model = Expert
